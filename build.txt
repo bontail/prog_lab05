@@ -1,0 +1,25 @@
+
+javac --release 17 -cp lib/annotations.jar:lib/jackson-databind.jar:lib/jackson-core.jar:lib/jackson-annotations.jar:lib/jackson-dataformat-csv.jar src/**/*.java -d out/
+
+
+jar --create --file lab05.jar --manifest MANIFEST.MF -C out/ .
+
+uplitmo lib/annotations.jar
+uplitmo lib/jackson-annotations.jar
+uplitmo lib/jackson-core.jar
+uplitmo lib/jackson-databind.jar
+uplitmo lib/jackson-dataformat-csv.jar
+uplitmo lab05.jar
+
+
+
+citmo
+mkdir lib
+mv annotations.jar lib/annotations.jar
+mv jackson-annotations.jar lib/jackson-annotations.jar
+mv jackson-core.jar lib/jackson-core.jar
+mv jackson-databind.jar lib/jackson-databind.jar
+mv jackson-dataformat-csv.jar lib/jackson-dataformat-csv.jar
+touch data.csv
+touch .dump.csv
+export COLLECTION_FILENAME=data.csv && java -jar lab05.jar

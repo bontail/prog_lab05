@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Main-Class: main.java.dev.bontail.lab5.Main
+Class-Path: lib/annotations.jar lib/jackson-databind.jar lib/jackson-core.jar lib/jackson-annotations.jar lib/jackson-dataformat-csv.jar
+Build-Jdk: 17.0.1
