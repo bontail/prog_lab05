@@ -13,13 +13,13 @@ import java.util.*;
  */
 public class Invoker {
     private final static int HISTORY_SIZE = 11;
-    LinkedHashMap<String, Command> commands = new LinkedHashMap<>();
+    public LinkedHashMap<String, Command> commands = new LinkedHashMap<>();
     private boolean isRunningApp = true;
-    ArrayDeque<Command> history = new ArrayDeque<>(HISTORY_SIZE);
-    Scanner sc;
+    public ArrayDeque<Command> history = new ArrayDeque<>(HISTORY_SIZE);
+    public Scanner sc;
 
     @Getter
-    HashSet<String> openedExecutionScripts;
+    public HashSet<String> openedExecutionScripts;
 
 
     public Invoker(Scanner sc, HashSet<String> openedExecutionScripts) {
