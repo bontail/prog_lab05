@@ -1,7 +1,7 @@
 package main.java.dev.bontail.lab5.commands;
 import main.java.dev.bontail.lab5.Invoker;
 import main.java.dev.bontail.lab5.PersonManager;
-import main.java.dev.bontail.lab5.ReflectionInvoker;
+import main.java.dev.bontail.lab5.validator.Validator;
 import main.java.dev.bontail.lab5.data.Person;
 
 import java.util.ArrayList;
@@ -19,9 +19,9 @@ public class AddIfMaxCommand extends AddCommand {
 
     @Override
     public Boolean execute(String[] personArgs) {
-        ReflectionInvoker personReflectionInvoker = new ReflectionInvoker(Person.class, false);
-        if (personArgs.length != personReflectionInvoker.getCheckedFields().size()) {
-            System.out.println("add_if_max need " + personReflectionInvoker.getCheckedFields().size() + " fields [name, height, weight, hairColor, nationality]");
+        Validator personValidator = new Validator(Person.class, false);
+        if (personArgs.length != personValidator.getCheckedFields().size()) {
+            System.out.println("add_if_max need " + personValidator.getCheckedFields().size() + " fields [name, height, weight, hairColor, nationality]");
             return false;
         }
 
@@ -30,13 +30,13 @@ public class AddIfMaxCommand extends AddCommand {
         System.out.println(persons);
         persons.add(person);
         Collections.sort(persons);
-        if (persons.get(persons.size() - 1).equals(person)) {
-            this.personManager.addPerson(person);
-            System.out.println(person.getName() + " added");
+        if (!persons.get(persons.size() - 1).equals(person)) {
+            System.out.println("Person " + person.getName() + "is not max");
             return true;
         }
 
-        System.out.println(person.getName() + " don't added");
+        this.personManager.addPerson(person);
+        System.out.println("Successful add " + person.getName());
         return true;
     }
 

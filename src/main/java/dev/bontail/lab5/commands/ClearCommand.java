@@ -16,7 +16,7 @@ public class ClearCommand implements Command {
         }
 
         this.personManager.clear();
-        System.out.println("Clear done");
+        System.out.println("Successful clear");
         return true;
     }
 

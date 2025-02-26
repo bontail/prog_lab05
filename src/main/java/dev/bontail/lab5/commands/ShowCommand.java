@@ -15,6 +15,7 @@ public class ShowCommand implements Command {
             return false;
         }
 
+        System.out.println("show: ");
         System.out.print(personManager);
         return true;
     }

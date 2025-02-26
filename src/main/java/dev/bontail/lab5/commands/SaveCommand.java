@@ -18,8 +18,8 @@ public class SaveCommand implements Command {
             return false;
         }
 
-        this.personManager.write();
-        System.out.println("save done");
+        this.personManager.dump();
+        System.out.println("Successful save");
         return true;
     }
 

@@ -16,6 +16,7 @@ public class ExitCommand implements Command {
         }
 
         this.invoker.stopApp();
+        System.out.println("Bye bye!");
         return true;
     }
 

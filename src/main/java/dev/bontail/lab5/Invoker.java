@@ -1,32 +1,35 @@
 package main.java.dev.bontail.lab5;
 
+import lombok.Getter;
 import main.java.dev.bontail.lab5.commands.Command;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-
+/**
+ * Save all commands
+ * Save history
+ * Works with console
+ */
 public class Invoker {
     private final static int HISTORY_SIZE = 11;
     LinkedHashMap<String, Command> commands = new LinkedHashMap<>();
     private boolean isRunningApp = true;
     ArrayDeque<Command> history = new ArrayDeque<>(HISTORY_SIZE);
     Scanner sc;
-    HashSet<String> openedFiles;
+
+    @Getter
+    HashSet<String> openedExecutionScripts;
 
 
-    public Invoker(Scanner sc, HashSet<String> openedFiles) {
+    public Invoker(Scanner sc, HashSet<String> openedExecutionScripts) {
         this.sc = sc;
         this.sc.useDelimiter("\n");
-        this.openedFiles = openedFiles;
-    }
-
-    public HashSet<String> getOpenedFiles(){
-        return this.openedFiles;
+        this.openedExecutionScripts = openedExecutionScripts;
     }
 
     public ArrayList<Command> getCommands() {
-        return new ArrayList<Command>(this.commands.values());
+        return new ArrayList<>(this.commands.values());
     }
 
     public void setCommands(@NotNull ArrayList<Command> commands) {
@@ -61,7 +64,7 @@ public class Invoker {
         return tokens;
     }
 
-    public boolean needDump(){
+    public boolean askForBackup(){
         System.out.println("You didn't save your changes and want to go back to them? (Yes/No)");
         String[] tokens = this.getLineTokens();
         while (tokens.length != 1 || (!tokens[0].equals("Yes") && !tokens[0].equals("No"))){
@@ -88,7 +91,6 @@ public class Invoker {
             if (command.execute(args)) {
                 this.addCommandToHistory(command);
             }
-            ;
         }
     }
 }

@@ -30,6 +30,7 @@ public class FilterGreaterThanWeightCommand implements Command {
         ArrayList<Person> persons = this.personManager.getFilteredPersons(
                 person -> person.getWeight() != null && person.getWeight() > weight
         ).collect(Collectors.toCollection(ArrayList::new));
+        System.out.println("Persons: ");
         for (Person person: persons){
             System.out.print(person + ", ");
         }

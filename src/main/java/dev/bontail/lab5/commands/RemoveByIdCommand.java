@@ -26,11 +26,11 @@ public class RemoveByIdCommand implements Command {
 
         Person personById = personManager.getPersonByField(person -> person.getId() == id);
         if (personById == null) {
-            System.out.println("person not found");
+            System.out.println("person with id " + id + " not found");
             return true;
         }
         personManager.removePerson(personById);
-        System.out.println("person removed");
+        System.out.println("Successful remove person " + personById);
         return true;
     }
 

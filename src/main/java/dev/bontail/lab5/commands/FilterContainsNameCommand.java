@@ -24,6 +24,7 @@ public class FilterContainsNameCommand implements Command {
         ArrayList<Person> persons = this.personManager.getFilteredPersons(
                 person -> person.getName().contains(args[0])
         ).collect(Collectors.toCollection(ArrayList::new));
+        System.out.println("Persons: ");
         for (Person person: persons){
             System.out.print(person + ", ");
         }

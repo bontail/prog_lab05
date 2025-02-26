@@ -1,4 +1,4 @@
-package main.java.dev.bontail.lab5;
+package main.java.dev.bontail.lab5.validator;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -7,30 +7,33 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 
 
-public class ReflectionInvoker {
+/**
+ * Class for checking fields in class which have @Check
+ * Uses reflection
+ * Validate args which are String
+ * Can check one Field by time
+ */
+public class Validator {
     public final Class<?> cls;
     private final boolean checkOneFieldByTime;
     private final ArrayList<Field> fields = new ArrayList<>();
     private int currentFieldIndex = 0;
 
-    public ReflectionInvoker(Class<?> cls, boolean checkOneFieldByTime) {
+    public Validator(Class<?> cls, boolean checkOneFieldByTime) {
         this.cls = cls;
         this.checkOneFieldByTime = checkOneFieldByTime;
-        if (checkOneFieldByTime) {
-            this.fields.addAll(this.getCheckedFields());
-        }
+        this.fields.addAll(this.getFieldsWithCheck());
     }
 
-    public InvalidField checkArg(String arg) {
-        if (this.checkOneFieldByTime) {
-            if (this.validateArg(arg, this.fields.get(this.currentFieldIndex))) {
-                this.currentFieldIndex++;
-                return null;
-            } else {
-                return new InvalidField(this.currentFieldIndex, this.fields.get(this.currentFieldIndex).getName());
+    public ArrayList<Field> getFieldsWithCheck(){
+        ArrayList<Field> fields = new ArrayList<>();
+        for (Field field : this.cls.getDeclaredFields()) {
+            field.setAccessible(true);
+            if (field.isAnnotationPresent(Check.class)) {
+                fields.add(field);
             }
         }
-        return null;
+        return fields;
     }
 
     public String getCurrentFieldName() {
@@ -42,18 +45,7 @@ public class ReflectionInvoker {
         return null;
     }
 
-    private ArrayList<Field> getBuiltinFields() {
-        ArrayList<Field> fields = new ArrayList<>();
-        for (Field field : this.cls.getDeclaredFields()) {
-            if (!field.getType().isEnum() && field.getType().getName().startsWith("main")) {
-                continue;
-            }
-            fields.add(field);
-        }
-        return fields;
-    }
-
-    public ArrayList<Field> getRecursiveFields() {
+    public ArrayList<Field> getNestedFields() {
         ArrayList<Field> fields = new ArrayList<>();
         for (Field field : this.cls.getDeclaredFields()) {
             if (!field.getType().getName().startsWith("main") || field.getType().isEnum()) {
@@ -66,24 +58,14 @@ public class ReflectionInvoker {
 
     public ArrayList<Field> getCheckedFields() {
         ArrayList<Field> fields = new ArrayList<>();
-        for (Field field : this.getBuiltinFields()) {
-            Method checker = this.getCheckerByField(field);
-            if (checker != null) {
-                fields.add(field);
-            }
+        if (this.checkOneFieldByTime) {
+            fields.add(this.fields.get(this.currentFieldIndex));
+        } else {
+            return this.fields;
         }
         return fields;
     }
 
-    public Method getCheckerByField(Field field) {
-        String methodName = "check" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);
-        Method method = null;
-        try {
-            method = this.cls.getMethod(methodName, field.getType());
-        } catch (SecurityException | NoSuchMethodException e) {
-        }
-        return method;
-    }
 
     public Object castToFieldType(String value, Class<?> fieldType) throws InvocationTargetException, IllegalAccessException {
         if (value == null) {
@@ -111,7 +93,7 @@ public class ReflectionInvoker {
             castedValue = value;
         }
         if (fieldType.isEnum()) {
-            Method valueOf = null;
+            Method valueOf;
             try {
                 valueOf = fieldType.getMethod("valueOf", String.class);
             } catch (NoSuchMethodException e) {
@@ -123,11 +105,9 @@ public class ReflectionInvoker {
         return castedValue;
     }
 
+
     private boolean validateArg(String arg, Field field) {
-        Method method = getCheckerByField(field);
-        if (method == null) {
-            return true;
-        }
+        Check annotation = field.getAnnotation(Check.class);
 
         Object castedValue = null;
         try {
@@ -139,10 +119,68 @@ public class ReflectionInvoker {
         } catch (Throwable e) {
             return false;
         }
-        try {
-            return (boolean) method.invoke(null, castedValue);
-        } catch (IllegalAccessException | InvocationTargetException e) {
+        if (castedValue == null) {
+            return !annotation.notNull();
+        }
+        if (annotation.notEmptyString() && ((String) castedValue).isEmpty()){
             return false;
+        }
+        if (field.getType().isEnum() || field.getType().getSimpleName().equals("String")) {
+            return true;
+        }
+        try {
+            Method method = Check.class.getDeclaredMethod("min" + castedValue.getClass().getSimpleName());
+            method.setAccessible(true);
+            Object minValue = method.invoke(annotation);
+            if (!validateMinValue(minValue, castedValue, field.getType())) {
+                return false;
+            }
+
+            method = Check.class.getDeclaredMethod("max" + castedValue.getClass().getSimpleName());
+            method.setAccessible(true);
+            Object maxValue = method.invoke(annotation);
+            if (!validateMaxValue(maxValue, castedValue, field.getType())) {
+                return false;
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            return false;
+        }
+        return true;
+    }
+
+    public boolean validateMinValue(Object minValue, Object currentValue, Class<?> fieldType){
+        if (fieldType.equals(Float.class)) {
+            return (Float) minValue <= (Float) currentValue;
+        } else if (fieldType.equals(Double.class)) {
+            return (Double) minValue <= (Double) currentValue;
+        } else if (fieldType.equals(Long.class)) {
+            return (Long) minValue <= (Long) currentValue;
+        } else if (fieldType.equals(Integer.class)) {
+            return (Integer) minValue <= (Integer) currentValue;
+        } else if (fieldType.equals(Short.class)) {
+            return (Short) minValue <= (Short) currentValue;
+        } else if (fieldType.equals(Byte.class)) {
+            return (Byte) minValue <= (Byte) currentValue;
+        } else {
+            throw new IllegalArgumentException("Invalid field type: " + fieldType.getName());
+        }
+    }
+
+    public boolean validateMaxValue(Object maxValue, Object currentValue, Class<?> fieldType){
+        if (fieldType.equals(Float.class)) {
+            return (Float) maxValue >= (Float) currentValue;
+        } else if (fieldType.equals(Double.class)) {
+            return (Double) maxValue >= (Double) currentValue;
+        } else if (fieldType.equals(Long.class)) {
+            return (Long) maxValue >= (Long) currentValue;
+        } else if (fieldType.equals(Integer.class)) {
+            return (Integer) maxValue >= (Integer) currentValue;
+        } else if (fieldType.equals(Short.class)) {
+            return (Short) maxValue >= (Short) currentValue;
+        } else if (fieldType.equals(Byte.class)) {
+            return (Byte) maxValue >= (Byte) currentValue;
+        } else {
+            throw new IllegalArgumentException("Invalid field type: " + fieldType.getName());
         }
     }
 
@@ -150,17 +188,13 @@ public class ReflectionInvoker {
         ArrayList<Field> fields = this.getCheckedFields();
         int argIndex = 0;
         for (Field field : fields) {
-            try {
-                boolean isValidArg = this.validateArg(args[argIndex], field);
-                if (!isValidArg) {
-                    return new InvalidField(argIndex, field.getName());
-                }
-                argIndex++;
-            } catch (IllegalArgumentException e) {
+            boolean isValidArg = this.validateArg(args[argIndex], field);
+            if (!isValidArg) {
                 return new InvalidField(argIndex, field.getName());
             }
+            argIndex++;
         }
-
+        this.currentFieldIndex++;
         return null;
     }
 
@@ -168,7 +202,7 @@ public class ReflectionInvoker {
         Object[] castedArgs = new Object[args.length];
         int i = 0;
         try {
-            for (Field field: this.getCheckedFields()){
+            for (Field field: this.fields){
                 castedArgs[i] = this.castToFieldType((String) args[i], field.getType());
                 i++;
             }
@@ -186,7 +220,7 @@ public class ReflectionInvoker {
             Object[] castedArgs = castArgs(args);
             Class<?>[] argTypes = new Class<?>[castedArgs.length];
             int i = 0;
-            for (Field field : this.getCheckedFields()) {
+            for (Field field : this.fields) {
                 argTypes[i] = field.getType();
                 i++;
             }

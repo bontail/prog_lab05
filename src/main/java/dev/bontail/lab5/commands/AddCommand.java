@@ -1,8 +1,8 @@
 package main.java.dev.bontail.lab5.commands;
-import main.java.dev.bontail.lab5.InvalidField;
+import main.java.dev.bontail.lab5.validator.InvalidField;
 import main.java.dev.bontail.lab5.Invoker;
 import main.java.dev.bontail.lab5.PersonManager;
-import main.java.dev.bontail.lab5.ReflectionInvoker;
+import main.java.dev.bontail.lab5.validator.Validator;
 import main.java.dev.bontail.lab5.data.Coordinates;
 import main.java.dev.bontail.lab5.data.Location;
 import main.java.dev.bontail.lab5.data.Person;
@@ -21,8 +21,8 @@ public class AddCommand implements Command {
     }
 
     protected Person createPerson(String[] personArgs){
-        ReflectionInvoker personReflectionInvoker = new ReflectionInvoker(Person.class, false);
-        InvalidField invalidField = personReflectionInvoker.checkArgs(personArgs);
+        Validator personValidator = new Validator(Person.class, false);
+        InvalidField invalidField = personValidator.checkArgs(personArgs);
         while (invalidField != null) {
             System.out.println("Please write valid value for: " + invalidField.name());
             String[] new_args = this.invoker.getLineTokens();
@@ -32,24 +32,24 @@ public class AddCommand implements Command {
             }
 
             personArgs[invalidField.index()] = new_args[0];
-            invalidField = personReflectionInvoker.checkArgs(personArgs);
+            invalidField = personValidator.checkArgs(personArgs);
         }
 
-        ReflectionInvoker coordinatesReflectionInvoker = new ReflectionInvoker(Coordinates.class, true);
-        String[] coordinatesArgs = this.checkRecursiveClasses(personReflectionInvoker, coordinatesReflectionInvoker);
+        Validator coordinatesValidator = new Validator(Coordinates.class, true);
+        String[] coordinatesArgs = this.checkRecursiveClasses(personValidator, coordinatesValidator);
 
-        ReflectionInvoker locationReflectionInvoker = new ReflectionInvoker(Location.class, true);
-        String[] locationArgs = this.checkRecursiveClasses(personReflectionInvoker, locationReflectionInvoker);
+        Validator locationValidator = new Validator(Location.class, true);
+        String[] locationArgs = this.checkRecursiveClasses(personValidator, locationValidator);
 
-        Coordinates coordinates = (Coordinates) coordinatesReflectionInvoker.createInstance(coordinatesArgs, new ArrayList<>());
-        Location location = (Location) locationReflectionInvoker.createInstance(locationArgs, new ArrayList<>());
+        Coordinates coordinates = (Coordinates) coordinatesValidator.createInstance(coordinatesArgs, new ArrayList<>());
+        Location location = (Location) locationValidator.createInstance(locationArgs, new ArrayList<>());
 
         Object[] newPersonArgs = new Object[personArgs.length + 2];
         System.arraycopy(personArgs, 0, newPersonArgs, 0, personArgs.length);
         newPersonArgs[personArgs.length] = coordinates;
         newPersonArgs[personArgs.length + 1] = location;
 
-        return (Person) personReflectionInvoker.createInstance(newPersonArgs, new ArrayList<>(){{
+        return (Person) personValidator.createInstance(newPersonArgs, new ArrayList<>(){{
             add(Coordinates.class);
             add(Location.class);
         }});
@@ -57,31 +57,31 @@ public class AddCommand implements Command {
 
     @Override
     public Boolean execute(String[] personArgs) {
-        ReflectionInvoker personReflectionInvoker = new ReflectionInvoker(Person.class, false);
-        if (personArgs.length != personReflectionInvoker.getCheckedFields().size()) {
-            System.out.println("add need " + personReflectionInvoker.getCheckedFields().size() + " fields [name, height, weight, hairColor, nationality]");
+        Validator personValidator = new Validator(Person.class, false);
+        if (personArgs.length != personValidator.getCheckedFields().size()) {
+            System.out.println("add need " + personValidator.getCheckedFields().size() + " fields [name, height, weight, hairColor, nationality]");
             return false;
         }
 
         Person person = this.createPerson(personArgs);
         this.personManager.addPerson(person);
-        System.out.println("Successfully added " + person.getName());
+        System.out.println("Successful add " + person.getName());
 
         return true;
     }
 
-    private String[] checkRecursiveClasses(ReflectionInvoker mainReflectionInvoker, ReflectionInvoker reflectionInvoker) {
+    private String[] checkRecursiveClasses(Validator mainValidator, Validator Validator) {
         InvalidField invalidField;
         ArrayList<String> args = new ArrayList<>();
-        String fieldName = reflectionInvoker.cls.getSimpleName();
-        for (Field field: mainReflectionInvoker.getRecursiveFields()){
-            if (field.getType().equals(reflectionInvoker.cls)){
+        String fieldName = Validator.cls.getSimpleName();
+        for (Field field: mainValidator.getNestedFields()){
+            if (field.getType().equals(Validator.cls)){
                 fieldName = field.getName();
                 break;
             }
         }
-        while (reflectionInvoker.getCurrentFieldName() != null) {
-            System.out.println("Please enter: " + fieldName + " " + reflectionInvoker.getCurrentFieldName());
+        while (Validator.getCurrentFieldName() != null) {
+            System.out.println("Please enter: " + fieldName + " " + Validator.getCurrentFieldName());
             String[] tokens = this.invoker.getLineTokens();
             if (tokens.length == 0){
                 tokens = new String[1];
@@ -89,7 +89,7 @@ public class AddCommand implements Command {
                 tokens[0] = String.join(" ", args);
             }
             do {
-                invalidField = reflectionInvoker.checkArg(tokens[0]);
+                invalidField = Validator.checkArgs(tokens);
                 if (invalidField != null) {
                     System.out.println("Please write valid value for: " + fieldName + " " + invalidField.name());
                     tokens = this.invoker.getLineTokens();

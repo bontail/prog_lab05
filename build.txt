@@ -1,5 +1,5 @@
 
-javac --release 17 -cp lib/annotations.jar:lib/jackson-databind.jar:lib/jackson-core.jar:lib/jackson-annotations.jar:lib/jackson-dataformat-csv.jar src/**/*.java -d out/
+javac --release 17 -cp lib/annotations.jar:lib/jackson-databind.jar:lib/jackson-core.jar:lib/jackson-annotations.jar:lib/jackson-dataformat-csv.jar:lib/lombok.jar src/**/*.java -d out/
 
 
 jar --create --file lab05.jar --manifest MANIFEST.MF -C out/ .
@@ -20,6 +20,6 @@ mv jackson-annotations.jar lib/jackson-annotations.jar
 mv jackson-core.jar lib/jackson-core.jar
 mv jackson-databind.jar lib/jackson-databind.jar
 mv jackson-dataformat-csv.jar lib/jackson-dataformat-csv.jar
-touch data.csv
-touch .dump.csv
-export COLLECTION_FILENAME=data.csv && java -jar lab05.jar
+touch dump.csv
+touch .backup.csv
+export COLLECTION_FILENAME=dump.csv && java -jar lab05.jar

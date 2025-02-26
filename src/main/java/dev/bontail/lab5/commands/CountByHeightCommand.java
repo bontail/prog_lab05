@@ -24,10 +24,10 @@ public class CountByHeightCommand implements Command {
             return false;
         }
 
-        Long count = this.personManager.getFilteredPersons(
+        long count = this.personManager.getFilteredPersons(
                 person -> person.getHeight() != null && person.getHeight().equals(height)
         ).count();
-        System.out.println(count);
+        System.out.println("Count: " + count);
         return true;
     }
 

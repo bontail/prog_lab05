@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 
-public class ExecuteCommand implements Command {
+public class ExecuteScriptCommand implements Command {
     PersonManager personManager;
     Invoker invoker;
 
-    public ExecuteCommand(PersonManager personManager, Invoker invoker) {
+    public ExecuteScriptCommand(PersonManager personManager, Invoker invoker) {
         this.invoker = invoker;
         this.personManager = personManager;
     }
@@ -26,17 +26,17 @@ public class ExecuteCommand implements Command {
 
         String filename = args[0];
         try {
-            HashSet<String> openedFiles = this.invoker.getOpenedFiles();
-            if (openedFiles.contains(filename)) {
+            HashSet<String> openedExecutionScripts = this.invoker.getOpenedExecutionScripts();
+            if (openedExecutionScripts.contains(filename)) {
                 System.out.println("Recursive execution");
                 return false;
             }
-            openedFiles.add(filename);
+            openedExecutionScripts.add(filename);
             File file = new File(filename);
-            Invoker invoker = new Invoker(new Scanner(file), openedFiles);
+            Invoker invoker = new Invoker(new Scanner(file), openedExecutionScripts);
             invoker.setCommands(Main.createCommands(this.personManager, invoker));
             invoker.startScanningConsole();
-            openedFiles.remove(filename);
+            openedExecutionScripts.remove(filename);
         } catch (FileNotFoundException e) {
             System.out.println("Invalid filename " + e.getMessage() + " " + filename);
             return false;
@@ -47,7 +47,7 @@ public class ExecuteCommand implements Command {
 
     @Override
     public String getName() {
-        return "execute";
+        return "execute_script";
     }
 
     @Override

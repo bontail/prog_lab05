@@ -1,7 +1,7 @@
 package main.java.dev.bontail.lab5.commands;
 import main.java.dev.bontail.lab5.Invoker;
 import main.java.dev.bontail.lab5.PersonManager;
-import main.java.dev.bontail.lab5.ReflectionInvoker;
+import main.java.dev.bontail.lab5.validator.Validator;
 import main.java.dev.bontail.lab5.data.Person;
 
 public class UpdateCommand extends AddCommand {
@@ -16,9 +16,9 @@ public class UpdateCommand extends AddCommand {
 
     @Override
     public Boolean execute(String[] personArgs) {
-        ReflectionInvoker personReflectionInvoker = new ReflectionInvoker(Person.class, false);
-        if (personArgs.length != personReflectionInvoker.getCheckedFields().size() + 1) {
-            System.out.println("update need " + personReflectionInvoker.getCheckedFields().size() + 1 + " fields");
+        Validator personValidator = new Validator(Person.class, false);
+        if (personArgs.length != personValidator.getCheckedFields().size() + 1) {
+            System.out.println("update need " + personValidator.getCheckedFields().size() + 1 + " fields");
             return false;
         }
 
@@ -39,8 +39,8 @@ public class UpdateCommand extends AddCommand {
         System.arraycopy(personArgs, 1, newPersonArgs, 0, newPersonArgs.length);
 
         Person person = this.createPerson(newPersonArgs);
-        personById.clonePerson(person);
-        System.out.println("Person updated");
+        personById.setFrom(person);
+        System.out.println("Successful update");
         return true;
     }
 

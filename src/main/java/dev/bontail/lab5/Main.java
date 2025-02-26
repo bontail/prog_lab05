@@ -12,12 +12,12 @@ public class Main {
         Invoker invoker = new Invoker(new Scanner(System.in), new HashSet<>());
         ArrayList<Command> commands = Main.createCommands(personManager, invoker);
         invoker.setCommands(commands);
-        if (personManager.isActiveDump()){
-            if (invoker.needDump()) {
-                personManager.setFromDump();
+        if (Dumper.isActiveBackup(personManager.getPersons())){
+            if (invoker.askForBackup()) {
+                personManager.setPersons(Dumper.getBackupPersons());
+                System.out.println("Successful backup installation");
             } else {
-                personManager.dump();
-                System.out.println("Dump cleared");
+                Dumper.saveBackup(personManager.getPersons());
             }
         }
         invoker.startScanningConsole();
@@ -33,7 +33,7 @@ public class Main {
         commands.add(new RemoveByIdCommand(personManager));
         commands.add(new ClearCommand(personManager));
         commands.add(new SaveCommand(personManager, invoker));
-        commands.add(new ExecuteCommand(personManager, invoker));
+        commands.add(new ExecuteScriptCommand(personManager, invoker));
         commands.add(new ExitCommand(invoker));
         commands.add(new AddIfMaxCommand(personManager, invoker));
         commands.add(new RemoveLowerCommand(personManager, invoker));

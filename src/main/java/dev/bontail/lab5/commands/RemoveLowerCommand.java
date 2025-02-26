@@ -1,7 +1,7 @@
 package main.java.dev.bontail.lab5.commands;
 import main.java.dev.bontail.lab5.Invoker;
 import main.java.dev.bontail.lab5.PersonManager;
-import main.java.dev.bontail.lab5.ReflectionInvoker;
+import main.java.dev.bontail.lab5.validator.Validator;
 import main.java.dev.bontail.lab5.data.Person;
 
 import java.util.ArrayList;
@@ -19,9 +19,9 @@ public class RemoveLowerCommand extends AddCommand {
 
     @Override
     public Boolean execute(String[] args) {
-        ReflectionInvoker personReflectionInvoker = new ReflectionInvoker(Person.class, false);
-        if (args.length != personReflectionInvoker.getCheckedFields().size()) {
-            System.out.println("remove_lower need " + personReflectionInvoker.getCheckedFields().size() + " fields [name, height, weight, hairColor, nationality]");
+        Validator personValidator = new Validator(Person.class, false);
+        if (args.length != personValidator.getCheckedFields().size()) {
+            System.out.println("remove_lower need " + personValidator.getCheckedFields().size() + " fields [name, height, weight, hairColor, nationality]");
             return false;
         }
 
@@ -29,16 +29,16 @@ public class RemoveLowerCommand extends AddCommand {
         ArrayList<Person> persons = this.personManager.getPersons();
         persons.add(person);
         Collections.sort(persons);
-        int lowerPersons = 0;
+
+        System.out.println("Remove persons:");
         for (Person person1 : persons) {
             if (person.equals(person1)) {
                 break;
             }
+            System.out.println(person1);
             this.personManager.removePerson(person1);
-            lowerPersons++;
         }
-        this.personManager.addPerson(person);
-        System.out.println("remove_lower successful delete " + lowerPersons + " persons");
+
         return true;
     }
 
